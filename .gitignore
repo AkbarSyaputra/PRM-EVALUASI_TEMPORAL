@@ -1,0 +1,10 @@
+node_modules
+dist
+.DS_Store
+.env
+
+# Scratch folder for generated assets (raw TTS files, whisper models, ...)
+.cache
+
+# Ignore the output video from Git but not videos you import into src/.
+out
