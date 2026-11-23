@@ -14,6 +14,10 @@ model×periode — tetapi **pergeseran komposisi label menutupi sebagian penurun
 (efek komposisi −0,044), sehingga skor mentah hanya turun +0,031. Metrik agregat justru
 **menyembunyikan degradasi** (masking effect). Sebagian penurunan juga bersifat mekanis:
 fitur yang paling banyak hilang di 2024 dapat dibuang tanpa menjatuhkan skor.
+Catatan baseline jujur (temuan B-1): **all-ones** (tebakan konstan semua-positif)
+= 0,409 / 0,480 / **0,468** per periode — di FINAL(2024) **semua 8 model berada di
+bawahnya**, jadi klaim "model layak untuk triase" harus dibaca relatif terhadap
+baseline terkuat, bukan terhadap 0,076 (prevalensi-top1).
 
 ## Isi repo
 
@@ -71,7 +75,9 @@ tersimpan sebagai output di dalam notebook itu sendiri.
 
 | hipotesis | verdict | angka kunci |
 |---|---|---|
-| **H1** — performa turun seiring waktu karena model memburuk | ✅ didukung (dengan koreksi penamaan: metrik mentah MENYEMBUNYIKAN degradasi) | kualitas like-for-like turun di 15/16 pasangan (rata-rata +0,0750 di FINAL(2024)); komposisi menutupi −0,0436 → net mentah hanya +0,0314; monotonisitas mentah gagal (7 dari 8 model naik 2022→2023) |
+| **H1** (RKS, di-amendmen ke rolling) — performa menurun seiring jarak temporal | ❌ **tidak didukung** | slope +0,0153/tahun < SESOI 0,02; CI 95% (block per tahun uji) [+0,0062; +0,0246]; unit = 33 episode (Wilcoxon n=3 mustahil p<0,05 → amendmen) |
+| **F-1** (temuan, bukan hipotesis) — metrik mentah menyembunyikan degradasi | ✅ terbukti | kualitas like-for-like +0,0750 di 15/16 pasangan FINAL(2024); komposisi menutupi −0,0436 → net mentah +0,0314 |
+| **B-1** baseline all-ones | ⚠️ model di bawahnya di 2024 | all-ones 0,409/0,480/**0,468**; 8/8 model < 0,468 di FINAL(2024) |
 | **H2** — shift distribusi label berasosiasi dengan penurunan | ✅ didukung, lemah | ρ = 0,615; p-perm = 0,038; CI [0,044; 0,871]; efek minimum terdeteksi ≈ 0,732 > ρ |
 | **H3** — adaptasi dengan data terbaru lebih baik, urutan kronologis penting | ⚠️ sebagian | kronologis > slice 2022: ya; kronologis > slice acak: **tidak** (di dalam rentang 20 slice acak) |
 | **H4** — peringkat importance stabil sepanjang waktu | ❌ tidak lulus ambang 0,70 | ρ: 0,786 (TRAIN↔VAL) → 0,571 (VAL↔TEST) → 0,253 (TRAIN↔TEST) |
@@ -97,9 +103,9 @@ Semua modul dieksekusi penuh dalam notebook (0 error). Angka di bawah dari outpu
 | Modul | Hasil utama |
 |---|---|
 | A — karakterisasi pergeseran | JSD label-combo + CI + ambang permutasi; C2ST (AUC isi/mask/gabungan); missingness drift + CI; audit Zenodo → `EXTERNAL_VALIDATION` (lihat output sel C4) |
-| B — atribusi Shapley | Tier-1: φ_Y=−0,0066, φ_M=−0,0091 (sum=ΔM tepat, err 0); Tier-2: φ_Y=−0,0186, φ_C=−0,0013, φ_M=−0,0032 (err 3.5e-18); CI bootstrap mencakup nol; **suntikan sintetis tidak seluruhnya lulus → status EKSPLORATIF**; headroom +0,0908 |
-| C — adaptasi | Z2 (ROD rate 0.5) terbaik tanpa label: 2024 = 0,4654 vs Z0 0,4227; **H8 terbukti**: L2 (recency kontinu) − L1 = [+0,040; +0,035; +0,029; +0,032] semua > SESOI; **H6 gagal**: pemilihan margin tidak mengungguli acak |
-| D — RADAR-Route | routing depth-2 **tidak terbentuk** (dominan tunggal Y di semua episode) → hasil negatif Tier-3, dilaporkan apa adanya |
-| Statistik | 33 episode rolling-origin (h=1..3); H1 slope +0,0153/tahun, CI [+0,0009; +0,0296] → **False** (slope < SESOI 0,02) meski CI > 0 |
+| B — atribusi Shapley (**Lampiran eksploratif, di luar cakupan RKS**) | Tier-1: φ_Y=−0,0066, φ_M=−0,0091 (sum=ΔM tepat, err 0); Tier-2: err 3.5e-18; CI bootstrap mencakup nol; **D4 sintetis gagal sebagian → status EKSPLORATIF**; headroom +0,0908 |
+| C — adaptasi (evaluasi **remaining-2023**, leak E2 diperbaiki) | Z2 rate terpilih **di VAL saja** = 0,3 (nilai 2024 = pelaporan: 0,4467 vs Z0 0,4227); **H8 terbukti**: L2−L1 = [+0,038; +0,033; +0,027; +0,025] semua > SESOI; **H6 gagal**: margin tidak mengungguli acak |
+| D — RADAR-Route (**Lampiran eksploratif**) | routing depth-2 **tidak terbentuk** (dominan tunggal Y) → hasil negatif Tier-3 |
+| Statistik | 33 episode rolling (h=1..3); H1 slope +0,0153/tahun, CI **block per tahun uji** [+0,0062; +0,0246] → **False** (slope < SESOI); BSS: **4/6 label kalah dari prediksi konstan** |
 
 Verdict tiap hipotesis (H1–H8) dicetak oleh sel notebook — bukan diketik di README.
